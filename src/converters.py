@@ -3,6 +3,10 @@ from moviepy.editor import VideoFileClip
 from console_progressbar import ProgressBar
 
 
+def default(path: str):
+    raise NotImplementedError(f"Extension \"{path.split('.')[-1]}\" not found in the config!")
+
+
 def image(path: str):
     img = Image.open(path)
     pixels = img.load()
@@ -26,8 +30,9 @@ def image(path: str):
                 return pixel[0] % 2 + pixel[1] % 3 + pixel[2] % 6
 
     o = list()
-    pb = ProgressBar(total=img.size[0] * img.size[1],prefix='Converting image', 
-                     decimals=2, length=150, fill='█', zfill='_')
+    print(img.size[0])
+    print(img.size[1])
+    pb = ProgressBar(total=(img.size[0] - 1) * img.size[0] + (img.size[1] - 1) + 1,prefix='Converting image')
     for x in range(img.size[0]):
         for y in range(img.size[1]):
             pb.print_progress_bar(x * img.size[0] + y + 1)
@@ -38,8 +43,7 @@ def image(path: str):
 def video(path: str):
     o = []
     frames = list(VideoFileClip(path).iter_frames())
-    pb = ProgressBar(total=len(frames),prefix='Converting video', 
-                     decimals=2, length=150, fill='█', zfill='_')
+    pb = ProgressBar(total=len(frames),prefix='Converting video')
     print(len(frames))
     for ind, frame in enumerate(frames):
         flatten = frame.ravel().tolist()
@@ -47,3 +51,4 @@ def video(path: str):
         pb.print_progress_bar(ind + 1)
     print("Done!")
     return o
+

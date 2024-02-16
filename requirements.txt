@@ -1,5 +1,7 @@
 certifi==2024.2.2
 charset-normalizer==3.3.2
+click==8.1.7
+console_progressbar==1.1.2
 decorator==4.4.2
 idna==3.6
 imageio==2.34.0
