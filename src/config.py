@@ -1,4 +1,4 @@
-from src.converters import *
+from converters import *
 
 config = {
     # Images

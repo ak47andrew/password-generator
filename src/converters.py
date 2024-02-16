@@ -13,6 +13,8 @@ def image(path: str):
 
     def get_value(x: int, y: int):
         pixel = pixels[x,y]
+        if isinstance(pixel, int):
+            pixel = (pixel, pixel, pixel)
         match sum(pixel) % 7:
             case 0:
                 return 0
@@ -30,8 +32,6 @@ def image(path: str):
                 return pixel[0] % 2 + pixel[1] % 3 + pixel[2] % 6
 
     o = list()
-    print(img.size[0])
-    print(img.size[1])
     pb = ProgressBar(total=(img.size[0] - 1) * img.size[0] + (img.size[1] - 1) + 1,prefix='Converting image')
     for x in range(img.size[0]):
         for y in range(img.size[1]):
@@ -44,11 +44,9 @@ def video(path: str):
     o = []
     frames = list(VideoFileClip(path).iter_frames())
     pb = ProgressBar(total=len(frames),prefix='Converting video')
-    print(len(frames))
     for ind, frame in enumerate(frames):
         flatten = frame.ravel().tolist()
         o.append(sum(flatten) // len(flatten) + ind)
         pb.print_progress_bar(ind + 1)
-    print("Done!")
     return o
 
