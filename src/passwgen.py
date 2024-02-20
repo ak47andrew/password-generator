@@ -23,7 +23,7 @@ def main(path: str, length: int, offset: int, silent: bool):
             print("You specified folder. This can start a very long process")
         data = folder(path, silent)
         if not data:
-            print("No data found in folder! Make sure it contains at least one not empty file")
+            return print("No data found in folder! Make sure it contains at least one not empty file")
     else:
         ext = path.split(".")[-1].lower()
         command = config.get(ext, default)

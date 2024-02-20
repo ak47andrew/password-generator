@@ -1,4 +1,3 @@
-from pydoc import cli
 from PIL import Image
 from moviepy.editor import VideoFileClip
 from console_progressbar import ProgressBar
