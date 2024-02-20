@@ -171,3 +171,4 @@ cython_debug/
 # Testing
 test.py
 output.txt
+test/
