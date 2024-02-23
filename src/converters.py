@@ -1,7 +1,8 @@
-from PIL import Image
-from moviepy.editor import VideoFileClip
-from console_progressbar import ProgressBar
 import os
+
+from console_progressbar import ProgressBar
+from moviepy.editor import VideoFileClip
+from PIL import Image
 
 
 # ! DON'T REMOVE OR RENAME METHODS "default" AND "folder"!
