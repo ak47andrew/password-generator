@@ -12,16 +12,13 @@ from encoder import encode
 @click.option("--path", type=str, help="Path to the object")
 @click.option("--uri", type=str, help="Uri to the object")
 @click.option("--length", type=int, help="Length of the password", default=20)
-@click.option("--offset", type=int, help="Offset for generating passwords. Can be useful for generating several passwords from one source", default=0)
 @click.option('--silent', is_flag=True)
-def main(path: str, uri: str, length: int, offset: int, silent: bool):
+def main(path: str, uri: str, length: int, silent: bool):
     """Generates password of given length based on the given file"""
     if (not path and not uri) or (path and uri):
         return print("You should specify either --url or --path")
     if length <= 0:
         return print("length param should be positive")
-    if offset < 0:
-        return print("offset param should be non-negative")
     if path is not None and not exists(path):
         return print(f"{path} don't exist!")
 
@@ -34,7 +31,7 @@ def main(path: str, uri: str, length: int, offset: int, silent: bool):
                 print(f"Downloading file from {uri} to {path}...")
             try:
                 with open(path, "wb") as f:
-                    f.write(r.get(uri, timeout=60).content)
+                    f.write(r.get(uri).content)
             except r.exceptions.ReadTimeout as e:
                 return print(f"Timed out! {e}.\nTry again in a few minutes")
             except r.exceptions.ConnectionError as e:
@@ -52,7 +49,7 @@ def main(path: str, uri: str, length: int, offset: int, silent: bool):
             ext = path.split(".")[-1].lower()
             command = config.get(ext, default)
             data = command(path, silent)
-        hash = encode(data, length, offset)
+        hash = encode(data, length)
         print(hash if silent else f"Password is: {hash}")
     finally:
         if uri is not None:
