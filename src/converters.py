@@ -12,7 +12,7 @@ def default(path: str, silent: bool):
         print(f"No function found for the extension {path}. Using default method")
     with open(path, "rb") as f:
         data = f.read()
-    return [i for i in data]
+    return list(data)
 
 
 def folder(path: str, silent: bool):
@@ -33,7 +33,8 @@ def folder(path: str, silent: bool):
     return o
 
 
-# NOTE If you rename this methods, remove them or add new - don't forget to change them in the "config" variable
+# NOTE If you rename this methods, remove them or add new - don't forget to change them
+# in the "config" variable
 def image(path: str, silent: bool):
     img = Image.open(path)
     pixels = img.load()
@@ -58,8 +59,9 @@ def image(path: str, silent: bool):
             case 6:
                 return pixel[0] % 2 + pixel[1] % 3 + pixel[2] % 6
 
-    o = list()
-    pb = ProgressBar(total=(img.size[0] - 1) * img.size[0] + (img.size[1] - 1) + 1,prefix='Converting image')
+    o = []
+    pb = ProgressBar(total=(img.size[0] - 1) * img.size[0] + (img.size[1] - 1) + 1,
+                     prefix='Converting image')
     for x in range(img.size[0]):
         for y in range(img.size[1]):
             o.append(get_value(x, y))
@@ -75,7 +77,7 @@ def video(path: str, silent: bool):
             output = True
         else:
             output = False
-        
+
         subclip = clip.subclip(start, end)
 
         return subclip, output
@@ -87,10 +89,10 @@ def video(path: str, silent: bool):
         pb.print_progress_bar(0)
     start = 0
     end = 1
-    
+
     while True:
         subclip, finish = split_vid(clip, start, end)
-        
+
         start += 1
         end += 1
 
@@ -101,7 +103,7 @@ def video(path: str, silent: bool):
                 pb.next()
         if finish:
             break
-    
+
     return o
 
 

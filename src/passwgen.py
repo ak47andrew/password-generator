@@ -1,11 +1,46 @@
 from os.path import exists, isdir
 from os import remove
+import sys
 
 import click
 import requests as r
 
 from converters import config, default, folder
 from encoder import encode
+
+
+def handle_uri(uri: str, silent: bool):
+    if not (uri.startswith("http://") or uri.startswith("https://")):
+        uri = "http://" + uri
+    path = uri.split("/")[-1]
+    if not silent:
+        print(f"Downloading file from {uri} to {path}...")
+    try:
+        with open(path, "wb") as f:
+            f.write(r.get(uri, timeout=None).content)
+    except r.exceptions.ReadTimeout as e:
+        return print(f"Timed out! {e}.\nTry again in a few minutes")
+    except r.exceptions.ConnectionError as e:
+        return print(f"An error has occurred!\n{e}")
+    if not silent:
+        print("Done!")
+    return path
+
+
+def handle_folder(path: str, silent: bool):
+    if not silent:
+        print("You specified folder. This can start a very long process")
+    data = folder(path, silent)
+    if not data:
+        print("No data found in folder! Make sure it contains at least one not empty file")
+        sys.exit(1)
+    return data
+
+
+def handle_file(path: str, silent: bool):
+    ext = path.split(".")[-1].lower()
+    command = config.get(ext, default)
+    return command(path, silent)
 
 
 @click.command()
@@ -16,41 +51,25 @@ from encoder import encode
 def main(path: str, uri: str, length: int, silent: bool):
     """Generates password of given length based on the given file"""
     if (not path and not uri) or (path and uri):
-        return print("You should specify either --url or --path")
+        print("You should specify either --url or --path")
+        sys.exit(1)
     if length <= 0:
-        return print("length param should be positive")
+        print("length param should be positive")
+        sys.exit(1)
     if path is not None and not exists(path):
-        return print(f"{path} don't exist!")
+        print(f"{path} don't exist!")
+        sys.exit(1)
 
     try:
         if uri is not None:
-            if not (uri.startswith("http://") or uri.startswith("https://")):
-                uri = "http://" + uri
-            path = uri.split("/")[-1]
-            if not silent:
-                print(f"Downloading file from {uri} to {path}...")
-            try:
-                with open(path, "wb") as f:
-                    f.write(r.get(uri).content)
-            except r.exceptions.ReadTimeout as e:
-                return print(f"Timed out! {e}.\nTry again in a few minutes")
-            except r.exceptions.ConnectionError as e:
-                return print(f"An error has occurred!\n{e}")
-            if not silent:
-                print("Done!")
+            path = handle_uri(uri, silent)
 
         if isdir(path):
-            if not silent:
-                print("You specified folder. This can start a very long process")
-            data = folder(path, silent)
-            if not data:
-                return print("No data found in folder! Make sure it contains at least one not empty file")
+            data = handle_folder(path, silent)
         else:
-            ext = path.split(".")[-1].lower()
-            command = config.get(ext, default)
-            data = command(path, silent)
-        hash = encode(data, length)
-        print(hash if silent else f"Password is: {hash}")
+            data = handle_file(path, silent)
+        passw = encode(data, length)
+        print(passw if silent else f"Password is: {passw}")
     finally:
         if uri is not None:
             remove(path)
