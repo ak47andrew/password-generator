@@ -27,7 +27,7 @@ jobs:
 
       - name: Build for Linux
         run: |
-          pyinstaller --onefile your_script.py
+          pyinstaller --onefile src/passwgen.py
         env:
           PYTHONUNBUFFERED: "1"
 
@@ -59,7 +59,7 @@ jobs:
 
       - name: Build for Windows
         run: |
-          pyinstaller --onefile your_script.py
+          pyinstaller --onefile src\passwgen.py
         env:
           PYTHONUNBUFFERED: "1"
 
@@ -113,8 +113,8 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           artifacts: |
-            your_script
-            your_script.exe
+            passwgen
+            passwgen.exe
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ needs.tag-release.outputs.next_version }}
           name: Release ${{ needs.tag-release.outputs.next_version }}
