@@ -36,7 +36,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: linux-build
-          path: dist/your_script
+          path: dist/passwgen
 
   # Job to build the executable for Windows
   build-windows:
@@ -68,7 +68,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: windows-build
-          path: dist/your_script.exe
+          path: dist/passwgen.exe
 
   # Job to determine the next version and tag the commit
   tag-release:
