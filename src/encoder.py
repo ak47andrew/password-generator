@@ -16,7 +16,7 @@ def split_and_sum_with_interaction(source: list[int], length: int) -> list[int]:
     :return: List of sums of sublists with interaction.
     """
     if not source:
-        return []  # Return an empty list if the source list is empty.
+        return []  # Return an empty list if the source list is empty. 
 
     if length <= 0:
         raise ValueError("Length must be a positive integer.")
