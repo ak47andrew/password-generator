@@ -1,99 +1,83 @@
-I'll help you create a comprehensive README.md for this password generator project:
+# Генератор паролей на основе объектов файловой системы
 
-```markdown
-# Password Generator
+Инструмент командной строки, который генерирует уникальные пароли на основе входных файлов (изображений, видео или любых других файлов) и папок.
 
-A command-line tool that generates unique passwords based on input files (images, videos, or any other files).
+## Установка
 
-## Installation
+Существует два способа установки этого генератора паролей:
 
-There are two ways to install this password generator:
+### 1. Из Release (Рекомендовано)
 
-### 1. From Release (Recommended)
+1. Перейдите на страницу [Release](https://github.com/ak47andrew/password-generator/releases)
+2. Загрузите соответствующий исполняемый файл для вашей системы:
+   - `passagen` для Linux
+   - `passwgen.exe` для Windows
+3. Разместите исполняемый файл в нужном вам месте
+4. (Необязательно) Добавьте местоположение исполняемого файла в PATH для облегчения доступа
 
-1. Go to the [Releases](https://github.com/ak47andrew/password-generator/releases) page
-2. Download the appropriate executable for your system:
-   - `passwgen` for Linux
-   - `passwgen.exe` for Windows
-3. Place the executable in your desired location
-4. (Optional) Add the executable location to your system PATH for easier access
+### 2. Из исходного кода
 
-### 2. From Source
-
-1. Clone the repository:
+1. Скачайте исходный код:
 ```bash
 git clone https://github.com/ak47andrew/password-generator.git
 cd password-generator
 ```
 
-2. Install the required dependencies:
+2. Установите зависимости:
 ```bash
 pip install -r requirements.txt
 ```
 
-## Usage
+## Использование
 
-The password generator can be used with either local files or files from URLs.
+Генератор паролей можно использовать как с локальными файлами, так и с файлами из URI-адресов.
 
-### Basic Command Structure
+### Базовая структура команды
 
 ```bash
-# If installed from release:
+# Если установлено через Release:
 passwgen --path <path_to_file> --length <password_length>
 
-# If running from source:
+# Если установлено через исходный код:
 python src/passwgen.py --path <path_to_file> --length <password_length>
 ```
 
-### Options
+### Аргументы
 
-- `--path`: Path to the input file or folder
-- `--uri`: URL of the file to download and use
-- `--length`: Desired password length (default: 20)
-- `--silent`: Run in silent mode with minimal output
+- `--path`: Путь к файлу или папке
+- `--uri`: URL-адрес загружаемого и используемого файла
+- `--length`: Длина пароля (по умолчанию: 20)
+- `--silent`: Запуск в "Тихом" режиме с минимальным выводом данных
 
-### Examples
+### Примеры
 
-1. Generate password from a local image:
+1. Сгенерируйте пароль используя локальный файл:
 ```bash
 passwgen --path image.jpg --length 25
 ```
 
-2. Generate password from a URL:
+2. Сгенерируйте пароль используя uri:
 ```bash
 passwgen --uri https://example.com/image.png --length 30
 ```
 
-3. Generate password from a folder:
+3. Сгенерируйте пароль используя локальную папку:
 ```bash
 passwgen --path /path/to/folder --length 20
 ```
 
-### Supported File Types
+### Поддерживаемые типы файлов
 
-The generator has special handling for the following file types:
-- Images: `.png`, `.jpg`, `.jpeg`, `.bmp`, `.webp`
-- Videos: `.mov`, `.mp4`
+Генератор поддерживает обработку для следующих типов файлов:
+- Изображения: `.png`, `.jpg`, `.jpeg`, `.bmp`, `.webp`
+- Видео: `.mov`, `.mp4`
 
-Any other file type will be processed using the default method.
+Любой другой тип файла будет обработан с использованием метода по умолчанию.
 
-## Note
+## Примечания
 
-- When using the `--uri` option, the file will be downloaded temporarily and automatically deleted after password generation
-- When using folders, all files in the folder (and subfolders) will be processed
-- The minimum password length is 1, but longer passwords are recommended for security
+- При использовании опции `--uri` файл будет временно загружен и автоматически удален после генерации пароля
+- При использовании папок все файлы в папке (и подпапках) будут обработаны
+- Минимальная длина пароля равна 1, но для обеспечения безопасности рекомендуется использовать более длинные пароли.
 
-## License
-
-[Add your license information here]
-```
-
-This README provides clear instructions for both installation methods and comprehensive usage examples. You may want to add additional sections such as:
-
-- Contributing guidelines
-- Specific license information
-- More detailed technical documentation
-- Troubleshooting section
-- Security considerations
-
-Would you like me to expand on any of these sections?
+## [Лицензия](https://opensource.org/license/mit)
