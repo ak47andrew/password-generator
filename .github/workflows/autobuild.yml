@@ -90,11 +90,12 @@ jobs:
       - name: Determine Next Version
         id: versioning
         run: |
-          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "autobuild.0")
+          git fetch --tags
+          latest_tag=$(git tag -l "autobuild.*" | sort -V | tail -n 1 || echo "autobuild.0")
           latest_version=${latest_tag#autobuild.}
           next_version=$((latest_version + 1))
           echo "next_version=autobuild.${next_version}" >> $GITHUB_ENV
-          echo "::set-output name=next_version::autobuild.${next_version}"
+          echo "next_version=autobuild.${next_version}" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
         uses: ncipollo/release-action@v1
