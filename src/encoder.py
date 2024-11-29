@@ -7,51 +7,57 @@ def encode(data: list[int], length: int) -> str:
 
 def split_and_sum_with_interaction(source: list[int], length: int) -> list[int]:
     """
-    Splits a list into sublists of specified length and computes the sum of each sublist,
-    with additional interaction where the first element of each sublist affects the first
-    element of other sublists, the second affects the second, and so on.
-
-    :param source: List of integers to be split.
-    :param length: Target length of sublists.
-    :return: List of sums of sublists with interaction.
+    Splits a list into sublists and computes interactive sums to generate password components.
+    
+    Args:
+        source (list[int]): Input list of integers to process
+        length (int): Desired length of the output list
+    
+    Returns:
+        list[int]: Processed list of integers for password generation
+    
+    Raises:
+        ValueError: If length is not positive or source is None
     """
+    # Input validation
     if not source:
-        return []  # Return an empty list if the source list is empty. 
-
+        return []
     if length <= 0:
-        raise ValueError("Length must be a positive integer.")
-    
-    # if len(source) 
+        raise ValueError("Length must be a positive integer")
 
-    # Split the list into sublists
-    sublists = []
-    sublist = []
-    for num in source:
-        sublist.append(num)
-        if len(sublist) == ((len(source) // length) or 1):
-            sublists.append(sublist)
-            sublist = []
+    # Calculate initial chunk size for splitting
+    chunk_size = max(1, len(source) // length)
+    
+    # Create initial sublists
+    sublists = [
+        source[i:i + chunk_size]
+        for i in range(0, len(source), chunk_size)
+    ]
 
-    # print(len(source) // length)
-    
-    
+    # Generate additional sublists if needed
     while len(sublists) < length:
-        for sublist in sublists.copy():
-            s = []
-            for element in sublist:
-                s.append((element + len(sublists) + len(s)) ^ element)
-            sublists.append(s)
+        new_sublists = []
+        for sublist in sublists:
+            # Generate new sublist with interaction
+            new_sublist = [
+                (element + len(sublists) + i) ^ element
+                for i, element in enumerate(sublist)
+            ]
+            new_sublists.append(new_sublist)
+        sublists.extend(new_sublists)
+        
+    # Trim to desired length
     sublists = sublists[:length]
 
-    # Calculate sums with interaction
+    # Calculate interactive sums
     result = []
     for i in range(length):
-        try:
-            ss = sum(sublist[i] for sublist in sublists) + sum(sublists[i])
-        except IndexError:
-            ss = sum(sublists[i])
-        result.append(ss)
+        # Sum both the i-th elements from all sublists and the i-th sublist itself
+        current_sum = sum(sublist[i] if i < len(sublist) else 0 for sublist in sublists)
+        current_sum += sum(sublists[i]) if i < len(sublists) else 0
+        result.append(current_sum)
 
+    # Apply final transformations
     for _ in range(3):
         for i in range(len(result) - 1):
             result[i] = result[i - 1] + result[i] * result[i + 1]
