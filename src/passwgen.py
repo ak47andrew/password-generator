@@ -43,13 +43,7 @@ def handle_file(path: str, silent: bool):
     return command(path, silent)
 
 
-@click.command()
-@click.option("--path", type=str, help="Path to the object")
-@click.option("--uri", type=str, help="Uri to the object")
-@click.option("--length", type=int, help="Length of the password", default=20)
-@click.option('--silent', is_flag=True)
-def main(path: str, uri: str, length: int, silent: bool):
-    """Generates password of given length based on the given file"""
+def main(path: str, uri: str, length: int, silent: bool) -> str:
     if (not path and not uri) or (path and uri):
         print("You should specify either --url or --path")
         sys.exit(1)
@@ -62,17 +56,30 @@ def main(path: str, uri: str, length: int, silent: bool):
 
     try:
         if uri is not None:
-            path = handle_uri(uri, silent)
+            path = handle_uri(uri, silent)  # type: ignore 
+            if path is None:
+                return ""
 
         if isdir(path):
             data = handle_folder(path, silent)
         else:
             data = handle_file(path, silent)
         passw = encode(data, length)
-        print(passw if silent else f"Password is: {passw}")
+        return passw
     finally:
         if uri is not None:
             remove(path)
 
+
+@click.command()
+@click.option("--path", type=str, help="Path to the object")
+@click.option("--uri", type=str, help="Uri to the object")
+@click.option("--length", type=int, help="Length of the password", default=20)
+@click.option('--silent', is_flag=True)
+def cli_wrapper(path: str, uri: str, length: int, silent: bool):
+    """Generates password of given length based on the given file"""
+    passw = main(path, uri, length, silent)
+    print(passw if silent else f"Password is: {passw}")
+
 if __name__ == '__main__':
-    main()
+    cli_wrapper()
