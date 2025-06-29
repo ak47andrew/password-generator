@@ -2,225 +2,206 @@ name: Auto Build and Release
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      force_build:
+        description: 'Force build/release even without Python changes?'
+        type: boolean
+        required: true
+        default: true
 
 jobs:
-  # Add a new check-changes job that other jobs will depend on
   check-changes:
     runs-on: ubuntu-latest
     outputs:
-      python_changed: ${{ steps.check_files.outputs.python_changed }}
+      should_build: ${{ steps.set-outputs.outputs.should_build }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch all history for checking changes
+          fetch-depth: 0
 
-      - name: Check for Python file changes
-        id: check_files
+      - name: Determine Build Need
+        id: set-outputs
         run: |
-          git diff --name-only ${{ github.event.before }} ${{ github.event.after }} > changes.txt
-          echo "python_changed=$(if grep -q '\.py$' changes.txt; then echo 'true'; else echo 'false'; fi)" >> $GITHUB_OUTPUT
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            # Always build if manually forced
+            echo "should_build=true" >> $GITHUB_OUTPUT
+          else
+            # Check for Python changes in push events
+            git diff --name-only ${{ github.event.before }} ${{ github.event.after }} > changes.txt
+            changed=$(grep -q '\.py$' changes.txt && echo 'true' || echo 'false')
+            echo "should_build=$changed" >> $GITHUB_OUTPUT
+          fi
 
-  # Modify existing jobs to depend on check-changes
   build-linux:
     needs: check-changes
-    if: needs.check-changes.outputs.python_changed == 'true'
+    if: ${{ needs.check-changes.outputs.should_build }}
     runs-on: ubuntu-latest
-    outputs:
-      artifact-linux: ${{ steps.upload-linux.outputs.artifact }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12.7"
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install pyinstaller
           pip install -r requirements.txt
 
-      - name: Build for Linux
-        run: |
-          pyinstaller --onefile src/passwgen.py
-        env:
-          PYTHONUNBUFFERED: "1"
+      - name: Build CLI
+        run: pyinstaller --onefile src/passwgen.py
 
-      - name: Upload Linux Artifact
-        id: upload-linux
-        uses: actions/upload-artifact@v3
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: linux-build
+          name: linux-cli
           path: dist/passwgen
-  
+
   build-linux-ui:
     needs: check-changes
-    if: needs.check-changes.outputs.python_changed == 'true'
+    if: ${{ needs.check-changes.outputs.should_build }}
     runs-on: ubuntu-latest
-    outputs:
-      artifact-linux: ${{ steps.upload-linux.outputs.artifact }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12.7"
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install pyinstaller
           pip install -r requirements.txt
 
-      - name: Build for Linux
-        run: |
-          pyinstaller --onefile src/ui.py
-        env:
-          PYTHONUNBUFFERED: "1"
+      - name: Build UI
+        run: pyinstaller --onefile src/ui.py
 
-      - name: Upload Linux Artifact
-        id: upload-linux
-        uses: actions/upload-artifact@v3
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: linux-build-ui
+          name: linux-ui
           path: dist/ui
 
-  # Job to build the executable for Windows
-  # Modify the build-windows job like this:
   build-windows:
     needs: check-changes
-    if: needs.check-changes.outputs.python_changed == 'true'
+    if: ${{ needs.check-changes.outputs.should_build }}
     runs-on: windows-latest
-    outputs:
-      artifact-windows: ${{ steps.upload-windows.outputs.artifact }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
   
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12.7"
   
-      - name: Install dependencies
+      - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install pyinstaller
           pip install -r requirements.txt
   
-      # CHANGE: Remove --onefile flag
-      - name: Build for Windows
-        run: |
-          pyinstaller src\passwgen.py
+      - name: Build CLI (Directory Mode)
+        run: pyinstaller src\passwgen.py
           
-      # CHANGE: Archive the output directory instead of single file
-      - name: Package output
-        run: |
-          Compress-Archive -Path dist\passwgen -DestinationPath dist\passwgen.zip
+      - name: Package Output
+        run: Compress-Archive -Path dist\passwgen -DestinationPath dist\passwgen.zip
           
-      - name: Upload Windows Artifact
-        id: upload-windows
-        uses: actions/upload-artifact@v3
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: windows-build
-          # CHANGE: Upload the zip archive
+          name: windows-cli
           path: dist/passwgen.zip
     
   build-windows-ui:
     needs: check-changes
-    if: needs.check-changes.outputs.python_changed == 'true'
+    if: ${{ needs.check-changes.outputs.should_build }}
     runs-on: windows-latest
-    outputs:
-      artifact-windows: ${{ steps.upload-windows.outputs.artifact }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12.7"
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install pyinstaller
           pip install -r requirements.txt
 
-      - name: Build for Windows
-        run: |
-          pyinstaller --onefile src\ui.py
-        env:
-          PYTHONUNBUFFERED: "1"
+      - name: Build UI
+        run: pyinstaller --onefile src\ui.py
 
-      - name: Upload Windows Artifact
-        id: upload-windows
-        uses: actions/upload-artifact@v3
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: windows-build-ui
+          name: windows-ui
           path: dist/ui.exe
 
-  # Job to create a GitHub release and tag the version
   create-release:
-    needs: [check-changes, build-linux, build-windows, build-linux-ui, build-windows-ui]
-    if: needs.check-changes.outputs.python_changed == 'true'
+    needs: 
+      - check-changes
+      - build-linux
+      - build-windows
+      - build-linux-ui
+      - build-windows-ui
+    if: ${{ needs.check-changes.outputs.should_build }}
     runs-on: ubuntu-latest
     steps:
-      # Add this checkout step first
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Important to fetch all history and tags
+          fetch-depth: 0
 
-      - name: Download Linux Artifact
-        uses: actions/download-artifact@v3
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
         with:
-          name: linux-build
-
-      - name: Download Windows Artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: windows-build
-      
-      - name: Download UI Linux Artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: linux-build-ui
-
-      - name: Download UI Windows Artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: windows-build-ui
+          path: artifacts
 
       - name: Determine Next Version
         id: versioning
         run: |
           git fetch --tags
-          latest_tag=$(git tag -l "autobuild.*" | sort -V | tail -n 1 || echo "autobuild.0")
+          # Get latest autobuild tag
+          latest_tag=$(git tag -l "autobuild.*" --sort=-v:refname | head -n 1 || echo "autobuild.0")
           latest_version=${latest_tag#autobuild.}
           next_version=$((latest_version + 1))
           echo "next_version=autobuild.${next_version}" >> $GITHUB_ENV
           echo "next_version=autobuild.${next_version}" >> $GITHUB_OUTPUT
 
-      - name: Create GitHub Release
-        uses: ncipollo/release-action@v1
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
         with:
-          artifacts: |
-            passwgen
-            passwgen.exe
-            ui
-            ui.exe
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ steps.versioning.outputs.next_version }}
-          name: Release ${{ steps.versioning.outputs.next_version }}
+          tag_name: ${{ steps.versioning.outputs.next_version }}
+          name: "Release ${{ steps.versioning.outputs.next_version }}"
           body: |
-            Automated release for ${{ steps.versioning.outputs.next_version }}.
+            ## Automated Release
+            
+            - **Date**: ${{ steps.current-date.outputs.date }}
+            - **Trigger**: ${{ github.event_name }}
+            - **Changes**: ${{ github.event.commits[0].message || 'Manual trigger' }}
+            
+            ### Artifacts:
+            - CLI Application (Linux)
+            - CLI Application (Windows - directory mode)
+            - UI Application (Linux)
+            - UI Application (Windows)
+          files: |
+            artifacts/linux-cli
+            artifacts/windows-cli/passwgen.zip
+            artifacts/linux-ui
+            artifacts/windows-ui/ui.exe
           draft: false
           prerelease: false
