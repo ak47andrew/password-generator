@@ -93,6 +93,7 @@ jobs:
           path: dist/ui
 
   # Job to build the executable for Windows
+  # Modify the build-windows job like this:
   build-windows:
     needs: check-changes
     if: needs.check-changes.outputs.python_changed == 'true'
@@ -102,31 +103,36 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
-
+  
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.12.7"
-
+  
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install pyinstaller
           pip install -r requirements.txt
-
+  
+      # CHANGE: Remove --onefile flag
       - name: Build for Windows
         run: |
-          pyinstaller --onefile src\passwgen.py
-        env:
-          PYTHONUNBUFFERED: "1"
-
+          pyinstaller src\passwgen.py
+          
+      # CHANGE: Archive the output directory instead of single file
+      - name: Package output
+        run: |
+          Compress-Archive -Path dist\passwgen -DestinationPath dist\passwgen.zip
+          
       - name: Upload Windows Artifact
         id: upload-windows
         uses: actions/upload-artifact@v3
         with:
           name: windows-build
-          path: dist/passwgen.exe
-  
+          # CHANGE: Upload the zip archive
+          path: dist/passwgen.zip
+    
   build-windows-ui:
     needs: check-changes
     if: needs.check-changes.outputs.python_changed == 'true'
