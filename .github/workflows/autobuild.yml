@@ -15,7 +15,7 @@ jobs:
   check-changes:
     runs-on: ubuntu-latest
     outputs:
-      should_build: ${{ steps.set-outputs.outputs.should_build }}
+      python_changed: ${{ steps.set-outputs.outputs.python_changed }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -27,17 +27,17 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             # Always build if manually forced
-            echo "should_build=true" >> $GITHUB_OUTPUT
+            echo "python_changed=${{ inputs.force_build || 'true' }}" >> $GITHUB_OUTPUT
           else
             # Check for Python changes in push events
             git diff --name-only ${{ github.event.before }} ${{ github.event.after }} > changes.txt
             changed=$(grep -q '\.py$' changes.txt && echo 'true' || echo 'false')
-            echo "should_build=$changed" >> $GITHUB_OUTPUT
+            echo "python_changed=$changed" >> $GITHUB_OUTPUT
           fi
 
   build-linux:
     needs: check-changes
-    if: ${{ needs.check-changes.outputs.should_build }}
+    if: needs.check-changes.outputs.python_changed == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -65,7 +65,7 @@ jobs:
 
   build-linux-ui:
     needs: check-changes
-    if: ${{ needs.check-changes.outputs.should_build }}
+    if: needs.check-changes.outputs.python_changed == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -93,7 +93,7 @@ jobs:
 
   build-windows:
     needs: check-changes
-    if: ${{ needs.check-changes.outputs.should_build }}
+    if: needs.check-changes.outputs.python_changed == 'true'
     runs-on: windows-latest
     steps:
       - name: Checkout Code
@@ -124,7 +124,7 @@ jobs:
     
   build-windows-ui:
     needs: check-changes
-    if: ${{ needs.check-changes.outputs.should_build }}
+    if: needs.check-changes.outputs.python_changed == 'true'
     runs-on: windows-latest
     steps:
       - name: Checkout Code
@@ -151,13 +151,8 @@ jobs:
           path: dist/ui.exe
 
   create-release:
-    needs: 
-      - check-changes
-      - build-linux
-      - build-windows
-      - build-linux-ui
-      - build-windows-ui
-    if: ${{ needs.check-changes.outputs.should_build }}
+    needs: [check-changes, build-linux, build-windows, build-linux-ui, build-windows-ui]
+    if: needs.check-changes.outputs.python_changed == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -174,8 +169,7 @@ jobs:
         id: versioning
         run: |
           git fetch --tags
-          # Get latest autobuild tag
-          latest_tag=$(git tag -l "autobuild.*" --sort=-v:refname | head -n 1 || echo "autobuild.0")
+          latest_tag=$(git tag -l "autobuild.*" | sort -V | tail -n 1 || echo "autobuild.0")
           latest_version=${latest_tag#autobuild.}
           next_version=$((latest_version + 1))
           echo "next_version=autobuild.${next_version}" >> $GITHUB_ENV
@@ -187,17 +181,9 @@ jobs:
           tag_name: ${{ steps.versioning.outputs.next_version }}
           name: "Release ${{ steps.versioning.outputs.next_version }}"
           body: |
-            ## Automated Release
-            
-            - **Date**: ${{ steps.current-date.outputs.date }}
-            - **Trigger**: ${{ github.event_name }}
-            - **Changes**: ${{ github.event.commits[0].message || 'Manual trigger' }}
-            
-            ### Artifacts:
-            - CLI Application (Linux)
-            - CLI Application (Windows - directory mode)
-            - UI Application (Linux)
-            - UI Application (Windows)
+            Automated release including:
+            - CLI application (Windows/Linux)
+            - UI application (Windows/Linux)
           files: |
             artifacts/linux-cli
             artifacts/windows-cli/passwgen.zip
