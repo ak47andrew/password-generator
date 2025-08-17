@@ -6,7 +6,7 @@ import click
 import requests as r
 
 from converters import config, default, folder
-from encoder import encode
+from encoder import encode_new, encode_old
 
 
 def handle_uri(uri: str, silent: bool):
@@ -43,7 +43,7 @@ def handle_file(path: str, silent: bool):
     return command(path, silent)
 
 
-def main(path: str, uri: str, length: int, silent: bool) -> str:
+def main(path: str, uri: str, length: int, silent: bool) -> tuple[str, str]:
     if (not path and not uri) or (path and uri):
         print("You should specify either --url or --path")
         sys.exit(1)
@@ -58,14 +58,16 @@ def main(path: str, uri: str, length: int, silent: bool) -> str:
         if uri is not None:
             path = handle_uri(uri, silent)  # type: ignore 
             if path is None:
-                return ""
+                print("Failed to resolve the URI")
+                sys.exit(1)
 
         if isdir(path):
             data = handle_folder(path, silent)
         else:
             data = handle_file(path, silent)
-        passw = encode(data, length)
-        return passw
+        passw_new = encode_new(data, length)
+        passw_old = encode_old(data, length)
+        return passw_old, passw_new
     finally:
         if uri is not None:
             remove(path)
@@ -78,8 +80,13 @@ def main(path: str, uri: str, length: int, silent: bool) -> str:
 @click.option('--silent', is_flag=True)
 def cli_wrapper(path: str, uri: str, length: int, silent: bool):
     """Generates password of given length based on the given file"""
-    passw = main(path, uri, length, silent)
-    print(passw if silent else f"Password is: {passw}")
+    passw_old, passw_new = main(path, uri, length, silent)
+    if silent:
+        print(passw_old, passw_new, sep="\n")
+    else:
+        print("Here's your passwords")
+        print(f"Legacy option: {passw_old}")
+        print(f"Modern option: {passw_new}")
 
 if __name__ == '__main__':
     cli_wrapper()

@@ -1,7 +1,7 @@
 import os
 
 from console_progressbar import ProgressBar
-from moviepy.editor import VideoFileClip
+# from moviepy.editor import VideoFileClip  # FIXME: fix this dependency
 from PIL import Image
 
 
@@ -70,41 +70,41 @@ def image(path: str, silent: bool):
     return o
 
 
-def video(path: str, silent: bool):
-    def split_vid(clip: VideoFileClip, start: int, end: int) -> tuple[VideoFileClip, bool]:
-        if end > clip.duration:
-            end = clip.duration
-            output = True
-        else:
-            output = False
+# def video(path: str, silent: bool):
+#     def split_vid(clip: VideoFileClip, start: int, end: int) -> tuple[VideoFileClip, bool]:
+#         if end > clip.duration:
+#             end = clip.duration
+#             output = True
+#         else:
+#             output = False
 
-        subclip = clip.subclip(start, end)
+#         subclip = clip.subclip(start, end)
 
-        return subclip, output
+#         return subclip, output
 
-    o = []
-    clip = VideoFileClip(path)
-    pb = ProgressBar(total=int(clip.fps * clip.duration) + 1,prefix='Converting video')
-    if not silent:
-        pb.print_progress_bar(0)
-    start = 0
-    end = 1
+#     o = []
+#     clip = VideoFileClip(path)
+#     pb = ProgressBar(total=int(clip.fps * clip.duration) + 1,prefix='Converting video')
+#     if not silent:
+#         pb.print_progress_bar(0)
+#     start = 0
+#     end = 1
 
-    while True:
-        subclip, finish = split_vid(clip, start, end)
+#     while True:
+#         subclip, finish = split_vid(clip, start, end)
 
-        start += 1
-        end += 1
+#         start += 1
+#         end += 1
 
-        for ind, frame in enumerate(subclip.iter_frames()):
-            flatten = frame.ravel().tolist()
-            o.append(sum(flatten) // len(flatten) + ind)
-            if not silent:
-                pb.next()
-        if finish:
-            break
+#         for ind, frame in enumerate(subclip.iter_frames()):
+#             flatten = frame.ravel().tolist()
+#             o.append(sum(flatten) // len(flatten) + ind)
+#             if not silent:
+#                 pb.next()
+#         if finish:
+#             break
 
-    return o
+#     return o
 
 
 config = {
@@ -116,6 +116,6 @@ config = {
     "webp": image,
 
     # Videos
-    "mov": video,
-    "mp4": video,
+    # "mov": video,
+    # "mp4": video,
 }
