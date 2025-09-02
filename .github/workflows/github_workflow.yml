@@ -12,7 +12,33 @@ on:
         default: true
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-last: false
+      matrix:
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest
+        
+    - name: Run tests
+      run: |
+        python -m pytest test_passwgen.py -v
+
   check-changes:
+    needs: test
     runs-on: ubuntu-latest
     outputs:
       python_changed: ${{ steps.set-outputs.outputs.python_changed }}
@@ -36,7 +62,7 @@ jobs:
           fi
 
   build-linux:
-    needs: check-changes
+    needs: [test, check-changes]
     if: needs.check-changes.outputs.python_changed == 'true'
     runs-on: ubuntu-latest
     steps:
@@ -64,7 +90,7 @@ jobs:
           path: dist/passwgen
 
   build-linux-ui:
-    needs: check-changes
+    needs: [test, check-changes]
     if: needs.check-changes.outputs.python_changed == 'true'
     runs-on: ubuntu-latest
     steps:
@@ -92,7 +118,7 @@ jobs:
           path: dist/ui
 
   build-windows:
-    needs: check-changes
+    needs: [test, check-changes]
     if: needs.check-changes.outputs.python_changed == 'true'
     runs-on: windows-latest
     steps:
@@ -123,7 +149,7 @@ jobs:
           path: dist/passwgen.zip
     
   build-windows-ui:
-    needs: check-changes
+    needs: [test, check-changes]
     if: needs.check-changes.outputs.python_changed == 'true'
     runs-on: windows-latest
     steps:
@@ -151,7 +177,7 @@ jobs:
           path: dist/ui.exe
 
   create-release:
-    needs: [check-changes, build-linux, build-windows, build-linux-ui, build-windows-ui]
+    needs: [check-changes, build-linux, build-windows, build-linux-ui, build-windows-ui, test]
     if: needs.check-changes.outputs.python_changed == 'true'
     runs-on: ubuntu-latest
     steps:
