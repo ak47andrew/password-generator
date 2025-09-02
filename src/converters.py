@@ -18,7 +18,7 @@ def default(path: str, silent: bool):
 def folder(path: str, silent: bool):
     o = []
 
-    for file in os.listdir(path):
+    for file in sorted(os.listdir(path)):
         np = os.path.join(path, file)
         if not silent:
             print(f"Processing {np}")
