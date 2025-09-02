@@ -43,21 +43,23 @@ def image(path: str, silent: bool):
         pixel = pixels[x,y]
         if isinstance(pixel, int):
             pixel = (pixel, pixel, pixel)
-        match sum(pixel) % 7:
-            case 0:
-                return 0
-            case 1:
-                return 1
-            case 2:
-                return pixel[2] // 2
-            case 3:
-                return sum(pixel) // 3
-            case 4:
-                return pixel[0] + pixel[2]
-            case 5:
-                return pixel[0] % max(1, x) + pixel[1] % max(1, y)
-            case 6:
-                return pixel[0] % 2 + pixel[1] % 3 + pixel[2] % 6
+
+        # NOTE: Using if to support later python versions
+        sep = sum(pixel) % 7
+        if sep == 0:
+            return 0
+        if sep == 1:
+            return 1
+        if sep == 2:
+            return pixel[2] // 2
+        if sep == 3:
+            return sum(pixel) // 3
+        if sep == 4:
+            return pixel[0] + pixel[2]
+        if sep == 5:
+            return pixel[0] % max(1, x) + pixel[1] % max(1, y)
+        if sep == 6:
+            return pixel[0] % 2 + pixel[1] % 3 + pixel[2] % 6
 
     o = []
     pb = ProgressBar(total=(img.size[0] - 1) * img.size[0] + (img.size[1] - 1) + 1,

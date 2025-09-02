@@ -1,4 +1,6 @@
-def encode_old(data: list[int], length: int):
+from typing import List
+
+def encode_old(data: List[int], length: int):
     final_data = data[::(len(data) // (length + 1)) or 1][1:]
     while len(final_data) < length:
         final_data += final_data
@@ -7,14 +9,14 @@ def encode_old(data: list[int], length: int):
 
     return password
 
-def encode_new(data: list[int], length: int) -> str:
+def encode_new(data: List[int], length: int) -> str:
     final_data = split_and_sum_with_interaction(data, length)
     password =  "".join([chr((i + ind * length - 1) % 94 + 33) for ind, i in enumerate(final_data)])
 
     return password
 
 
-def split_and_sum_with_interaction(source: list[int], length: int) -> list[int]:
+def split_and_sum_with_interaction(source: List[int], length: int) -> List[int]:
     """
     Splits a list into sublists and computes interactive sums to generate password components.
     

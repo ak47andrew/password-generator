@@ -1,6 +1,7 @@
 from os.path import exists, isdir
 from os import remove
 import sys
+from typing import Tuple
 
 import click
 import requests as r
@@ -43,7 +44,7 @@ def handle_file(path: str, silent: bool):
     return command(path, silent)
 
 
-def main(path: str, uri: str, length: int, silent: bool) -> tuple[str, str]:
+def main(path: str, uri: str, length: int, silent: bool) -> Tuple[str, str]:
     if (not path and not uri) or (path and uri):
         print("You should specify either --url or --path")
         sys.exit(1)
