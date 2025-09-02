@@ -70,8 +70,8 @@ def main(path: str, uri: str, length: int, silent: bool) -> Tuple[str, str]:
         passw_old = encode_old(data, length)
         return passw_old, passw_new
     finally:
-        if uri is not None:
-            remove(path)
+        if uri is not None and exists(uri.split("/")[-1]):
+            remove(uri.split("/")[-1])
 
 
 @click.command()
@@ -85,7 +85,7 @@ def cli_wrapper(path: str, uri: str, length: int, silent: bool):
     if silent:
         print(passw_old, passw_new, sep="\n")
     else:
-        print("Here's your passwords")
+        print("\nHere's your passwords")
         print(f"Legacy option: {passw_old}")
         print(f"Modern option: {passw_new}")
 
