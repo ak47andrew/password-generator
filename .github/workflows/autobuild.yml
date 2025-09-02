@@ -165,29 +165,45 @@ jobs:
         with:
           path: artifacts
 
-      - name: Determine Next Version
+      - name: Determine Next Version and Get Commit Info
         id: versioning
         run: |
           git fetch --tags
           latest_tag=$(git tag -l "autobuild.*" | sort -V | tail -n 1 || echo "autobuild.0")
           latest_version=${latest_tag#autobuild.}
           next_version=$((latest_version + 1))
-          echo "next_version=autobuild.${next_version}" >> $GITHUB_ENV
+          
+          # Get commit message for release name
+          latest_commit_message=$(git log -1 --pretty=%s)
           echo "next_version=autobuild.${next_version}" >> $GITHUB_OUTPUT
+          echo "latest_commit_message=${latest_commit_message}" >> $GITHUB_OUTPUT
+          
+          # Get commit history since last release
+          if [ "$latest_tag" != "autobuild.0" ]; then
+            commit_history=$(git log --pretty=format:"- %s (%h)" $latest_tag..HEAD)
+          else
+            commit_history=$(git log --pretty=format:"- %s (%h)")
+          fi
+          echo "COMMIT_HISTORY<<EOF" >> $GITHUB_ENV
+          echo "$commit_history" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.versioning.outputs.next_version }}
-          name: "Release ${{ steps.versioning.outputs.next_version }}"
+          name: "${{ steps.versioning.outputs.latest_commit_message }}"
           body: |
-            Automated release including:
+            ### Changes since last release (${{ steps.versioning.outputs.previous_tag }})
+            ${{ env.COMMIT_HISTORY }}
+
+            ### Included in this release:
             - CLI application (Windows/Linux)
             - UI application (Windows/Linux)
           files: |
-            artifacts/linux-cli
+            artifacts/linux-cli/passwgen
             artifacts/windows-cli/passwgen.zip
-            artifacts/linux-ui
+            artifacts/linux-ui/ui
             artifacts/windows-ui/ui.exe
           draft: false
           prerelease: false
